@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/action_authenticate" android:title="@string/action_authenticate"
+        android:icon="@drawable/ic_glass_logo" />
+    <item android:id="@+id/action_capture" android:title="@string/action_capture"
+        android:icon="@drawable/ic_glass_logo" />
+    <item android:id="@+id/action_stop" android:title="@string/action_stop"
+        android:icon="@drawable/ic_stop" />
+</menu>

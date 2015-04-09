@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Ad Finder</string>
+    <string name="title_activity_hello_service">Hello</string>
+    <string name="action_stop">Quit</string>
+    <string name="hello_world">Capture and send an image to receive an Ad </string>
+    <string name="action_capture">Capture</string>
+    <string name="action_authenticate">Authenticate</string>
+</resources>
