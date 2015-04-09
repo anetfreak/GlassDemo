@@ -110,7 +110,7 @@ public class LiveCardMenuActivity extends Activity {
 
     private void authenticateUser(){
         Log.i("Test", "Authentication");
-        Uri webpage = Uri.parse("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=252473431161-0314f3l13do6kb34r7v0squmk604fjda.apps.googleusercontent.com&redirect_uri=http://localhost:8080/oauth2callback&scope=https://www.googleapis.com/auth/glass.timeline");
+        Uri webpage = Uri.parse("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=252473431161-a0l5t97jpccl8magnl105uqv305fmsr8.apps.googleusercontent.com&redirect_uri=http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/oauth2callback&scope=https://www.googleapis.com/auth/glass.timeline");
         Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
         if(intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
@@ -214,7 +214,7 @@ public class LiveCardMenuActivity extends Activity {
 
                 // open a URL connection to the Servlet
                 FileInputStream fileInputStream = new FileInputStream(fileLocation);
-                URL url1 = new URL("http://10.0.0.18:8080/uploadImage");
+                URL url1 = new URL("http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/uploadImage");
 
                 // Open a HTTP  connection to  the URL
                 HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
