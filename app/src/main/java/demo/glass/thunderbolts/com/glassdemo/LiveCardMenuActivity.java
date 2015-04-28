@@ -63,7 +63,7 @@ import android.widget.Toast;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
- * A transparent {@link Activity} displaying a "Stop" options menu to remove the {@link LiveCard}.
+ * A transparent {@link Activity} displaying a "Stop" options menu to remove the {@link com.google.android.glass.timeline.LiveCard}.
  */
 public class LiveCardMenuActivity extends Activity {
 
@@ -276,7 +276,7 @@ public class LiveCardMenuActivity extends Activity {
                 // open a URL connection to the Servlet
                 FileInputStream fileInputStream = new FileInputStream(fileLocation);
 //                URL url1 = new URL("http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/uploadImage");
-                URL url1 = new URL("http://10.0.0.18:8080/uploadImage" + "?email=" + getEmailId() + "&latitude=" + latitude + "&longitude=" + longitude);
+                URL url1 = new URL("http://10.0.0.20:8080/uploadImage");
 
                 // Open a HTTP  connection to  the URL
                 HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -291,6 +291,27 @@ public class LiveCardMenuActivity extends Activity {
                 conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
                 conn.setRequestProperty("Content-Disposition", "upload");
                 DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                dos.writeBytes("Content-Disposition: form-data;name=\"email\";filename=\"" + getEmailId() + "\"" + lineEnd);
+                //dos.writeBytes("Content-Type: text/plain" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes("amitagrawal@gmail.com");
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                dos.writeBytes("Content-Disposition: form-data;name=\"latitude\";filename=\"" + latitude + "\"" + lineEnd);
+                //dos.writeBytes("Content-Type: text/plain" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes("amitagrawal@gmail.com");
+                dos.writeBytes(lineEnd);
+                dos.writeBytes(twoHyphens + boundary + lineEnd);
+
+                dos.writeBytes("Content-Disposition: form-data;name=\"longitude\";filename=\"" + longitude + "\"" + lineEnd);
+                //dos.writeBytes("Content-Type: text/plain" + lineEnd);
+                dos.writeBytes(lineEnd);
+                dos.writeBytes("amitagrawal@gmail.com");
+                dos.writeBytes(lineEnd);
                 dos.writeBytes(twoHyphens + boundary + lineEnd);
 
                 dos.writeBytes("Content-Disposition: form-data;name=\"file\";filename=\""
@@ -338,6 +359,7 @@ public class LiveCardMenuActivity extends Activity {
                     response.append(line);
                     response.append('\r');
                 }
+                Log.i(TAG,response.toString());
                 rd.close();
 
                 Log.i(TAG, fileLocation + " uploaded successfully for scanning!");
