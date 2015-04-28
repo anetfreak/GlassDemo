@@ -1,9 +1,15 @@
 package demo.glass.thunderbolts.com.glassdemo;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -29,6 +35,7 @@ import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,6 +58,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -60,7 +68,8 @@ import javax.net.ssl.HttpsURLConnection;
 public class LiveCardMenuActivity extends Activity {
 
     private static final int TAKE_PICTURE_REQUEST = 1;
-    LocationManager locationManager;
+//    LocationManager locationManager;
+//    Location userLocation;
 
 //    @Override
 //    public void onCreate(Bundle savedInstanceState) {
@@ -110,7 +119,7 @@ public class LiveCardMenuActivity extends Activity {
 
     private void authenticateUser(){
         Log.i("Test", "Authentication");
-        Uri webpage = Uri.parse("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=252473431161-a0l5t97jpccl8magnl105uqv305fmsr8.apps.googleusercontent.com&redirect_uri=http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/oauth2callback&scope=https://www.googleapis.com/auth/glass.timeline");
+        Uri webpage = Uri.parse("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=252473431161-4l5l4qn97p86k80o8cghhoar9om5b8ut.apps.googleusercontent.com&redirect_uri=http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/oauth2callback&scope=https://www.googleapis.com/auth/glass.timeline");
         Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
         if(intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
@@ -124,6 +133,19 @@ public class LiveCardMenuActivity extends Activity {
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
+    private void makeToast(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private String getEmailId() {
+        Account[] glassAccount = AccountManager.get(this).getAccountsByType("com.google");
+        if(glassAccount.length > 0) {
+            Log.i("Glass Email: ", glassAccount[0].name);
+            return glassAccount[0].name;
+        }
+        return null;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i("Test", "onActivityResult");
@@ -132,8 +154,6 @@ public class LiveCardMenuActivity extends Activity {
             String picturePath = data.getStringExtra(Intents.EXTRA_PICTURE_FILE_PATH);
 
             processPictureWhenReady(picturePath);
-            // TODO: Show the thumbnail to the user while the full picture is being
-            // processed.
         }
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -146,8 +166,46 @@ public class LiveCardMenuActivity extends Activity {
 
         if (pictureFile.exists()) {
             // The picture is ready; process it.
-            ScanAPKFile task = new ScanAPKFile();
-            task.execute(new String[] { picturePath, pictureFile.toString() });
+            makeToast("Picture Taken. Processing..");
+
+
+            //Location
+
+            // This example requests fine accuracy and requires altitude, but
+            // these criteria could be whatever you want.
+//            Criteria criteria = new Criteria();
+//            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+//            criteria.setAltitudeRequired(true);
+//
+//            List<String> providers = locationManager.getProviders(
+//                    criteria, true /* enabledOnly */);
+//
+//            for (String provider : providers) {
+//                locationManager.requestLocationUpdates(provider, 1000, 10, locationListener);
+//            }
+
+
+            //Scale down the size of the image..
+            File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+            Bitmap b = BitmapFactory.decodeFile(picturePath);
+            Bitmap out = Bitmap.createScaledBitmap(b, 1280, 960, false);
+
+            File file = new File(dir, "resized.png");
+            FileOutputStream fOut;
+            try {
+                fOut = new FileOutputStream(file);
+                out.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+                fOut.flush();
+                fOut.close();
+                b.recycle();
+                out.recycle();
+
+                SendToServer task = new SendToServer();
+                task.execute(new String[] { file.getAbsolutePath(), file.toString() });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         } else {
             // The file does not exist yet. Before starting the file observer, you
@@ -190,7 +248,7 @@ public class LiveCardMenuActivity extends Activity {
     }
 
     //Class to POST an image to the server
-    private class ScanAPKFile extends AsyncTask<String, Void, String> {
+    private class SendToServer extends AsyncTask<String, Void, String> {
 
         private static final String TAG = "Test";
 
@@ -212,9 +270,13 @@ public class LiveCardMenuActivity extends Activity {
                 byte[] buffer;
                 int maxBufferSize = 1 * 1024 * 1024;
 
+                double latitude = 37.337166;
+                double longitude = -121.881329;
+
                 // open a URL connection to the Servlet
                 FileInputStream fileInputStream = new FileInputStream(fileLocation);
-                URL url1 = new URL("http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/uploadImage");
+//                URL url1 = new URL("http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/uploadImage");
+                URL url1 = new URL("http://10.0.0.18:8080/uploadImage" + "?email=" + getEmailId() + "&latitude=" + latitude + "&longitude=" + longitude);
 
                 // Open a HTTP  connection to  the URL
                 HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -230,10 +292,11 @@ public class LiveCardMenuActivity extends Activity {
                 conn.setRequestProperty("Content-Disposition", "upload");
                 DataOutputStream dos = new DataOutputStream( conn.getOutputStream() );
                 dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\"file\";filename=\""
+
+                dos.writeBytes("Content-Disposition: form-data;name=\"file\";filename=\""
                         + fileName + "\"" + lineEnd);
 
-                Log.i(TAG,"Content-Disposition: form-data; name=\"file\";filename=\""
+                Log.i(TAG,"Content-Disposition: form-data;name=\"file\";filename=\""
                         + fileName + "\"" + lineEnd);
                 dos.writeBytes(lineEnd);
                 bytesAvailable = fileInputStream.available();
@@ -259,7 +322,6 @@ public class LiveCardMenuActivity extends Activity {
                 fileInputStream.close();
                 dos.flush();
                 dos.close();
-                Log.i(TAG, fileLocation + " uploaded successfully for scanning!");
 
                 // Responses from the server (code and message)
                 int serverResponseCode = conn.getResponseCode();
@@ -278,14 +340,10 @@ public class LiveCardMenuActivity extends Activity {
                 }
                 rd.close();
 
+                Log.i(TAG, fileLocation + " uploaded successfully for scanning!");
                 JSONObject jObject  = new JSONObject(response.toString()); // json
-                //responseStr = jObject.getString("Malware");
 
-                //Log.i(TAG, "Response - "+ responseStr);
-
-
-            } catch(Exception e)
-            {
+            } catch(Exception e) {
                 Log.i(TAG, fileLocation + " cannot be uploaded for scanning!");
                 Log.i(TAG,e.getMessage());
                 return null;
@@ -297,3 +355,16 @@ public class LiveCardMenuActivity extends Activity {
     }
 
 }
+
+//LocationListener locationListener = new LocationListener() {
+//    public void onLocationChanged(Location location) {
+//        // Called when a new location is found by the network location provider.
+//        makeUseOfNewLocation(location);
+//    }
+//
+//    public void onStatusChanged(String provider, int status, Bundle extras) {}
+//
+//    public void onProviderEnabled(String provider) {}
+//
+//    public void onProviderDisabled(String provider) {}
+//};
