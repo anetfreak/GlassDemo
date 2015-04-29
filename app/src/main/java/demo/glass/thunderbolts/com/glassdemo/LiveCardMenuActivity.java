@@ -146,6 +146,28 @@ public class LiveCardMenuActivity extends Activity {
         return null;
     }
 
+    private  File scaleDownImage(String picturePath) {
+        //Scale down the size of the image..
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        Bitmap b = BitmapFactory.decodeFile(picturePath);
+        Bitmap out = Bitmap.createScaledBitmap(b, 1280, 960, false);
+
+        File file = new File(dir, "resized.png");
+        FileOutputStream fOut;
+        try {
+            fOut = new FileOutputStream(file);
+            out.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+            fOut.flush();
+            fOut.close();
+            b.recycle();
+            out.recycle();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i("Test", "onActivityResult");
@@ -186,26 +208,13 @@ public class LiveCardMenuActivity extends Activity {
 
 
             //Scale down the size of the image..
-            File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-            Bitmap b = BitmapFactory.decodeFile(picturePath);
-            Bitmap out = Bitmap.createScaledBitmap(b, 1280, 960, false);
+//            File file = scaleDownImage(picturePath);
+//
+//            SendToServer task = new SendToServer();
+//            task.execute(new String[] { file.getAbsolutePath(), file.toString() });
 
-            File file = new File(dir, "resized.png");
-            FileOutputStream fOut;
-            try {
-                fOut = new FileOutputStream(file);
-                out.compress(Bitmap.CompressFormat.PNG, 100, fOut);
-                fOut.flush();
-                fOut.close();
-                b.recycle();
-                out.recycle();
-
-                SendToServer task = new SendToServer();
-                task.execute(new String[] { file.getAbsolutePath(), file.toString() });
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            SendToServer task = new SendToServer();
+            task.execute(new String[] { picturePath, pictureFile.toString() });
 
         } else {
             // The file does not exist yet. Before starting the file observer, you
