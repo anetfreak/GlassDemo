@@ -285,7 +285,7 @@ public class LiveCardMenuActivity extends Activity {
                 // open a URL connection to the Servlet
                 FileInputStream fileInputStream = new FileInputStream(fileLocation);
 //                URL url1 = new URL("http://ec2-52-64-0-154.ap-southeast-2.compute.amazonaws.com:8080/uploadImage");
-                URL url1 = new URL("http://10.0.0.20:8080/uploadImage");
+                URL url1 = new URL("http://10.0.0.18:8080/uploadImage");
 
                 // Open a HTTP  connection to  the URL
                 HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
